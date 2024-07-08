@@ -1,0 +1,24 @@
+{
+  "name": "nextrans",
+  "version": "0.0.1",
+  "description": "A midtrans client implementation for Next.js applications",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iyxan23/nextrans.git"
+  },
+  "keywords": [
+    "nextjs",
+    "payment",
+    "payment-gateway",
+    "midtrans",
+    "client"
+  ],
+  "author": "iyxan23",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/iyxan23/nextrans/issues"
+  },
+  "homepage": "https://github.com/iyxan23/nextrans#readme"
+}
