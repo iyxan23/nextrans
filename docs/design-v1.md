@@ -44,9 +44,9 @@ const handle = createSnapPaymentNotificationHandler({
   // payment here is a parsed custom type
   onPayment: async (payment) => {},
 
-  // when someone tried doing something mischevious
-  onInvalid: async (request) => {
-    // someone tried faking midtrans
+  // when the request coming in is invalid (wrong creds or perhaps midtrans changed their schema)
+  onInvalid: async (request, error) => {
+    // either someone tried faking midtrans or midtrans messed up
   },
 });
 
