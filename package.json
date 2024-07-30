@@ -2,8 +2,7 @@
   "name": "nextrans",
   "version": "0.0.1",
   "description": "A midtrans client implementation for Next.js applications",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iyxan23/nextrans.git"
@@ -15,10 +14,19 @@
     "midtrans",
     "client"
   ],
+  "peerDependencies": {
+    "next": "^14.0.0-0 || ^15.0.0-0",
+    "react": "^18.2.0 || ^19.0.0-0"
+  },
   "author": "iyxan23",
   "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/iyxan23/nextrans/issues"
   },
-  "homepage": "https://github.com/iyxan23/nextrans#readme"
+  "homepage": "https://github.com/iyxan23/nextrans#readme",
+  "devDependencies": {
+    "parcel": "^2.12.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
 }

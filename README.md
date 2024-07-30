@@ -5,8 +5,13 @@ A typescript-first midtrans client implementation to better integrate Next.js ap
 ## Status
 
 `nextrans` is in development, and will probably not be ready in production use in the near
-future. For now, I'm only implementing the basic parts that works best for the projects that
-I have.
+future.
+
+## Goals
+
+ - TypeScript-first in any aspect.
+ - Make integrating midtrans a breeze for NextJS projects.
+ - Abstract away the complexities of the midtrans APIs.
 
 ## Background
 
@@ -26,11 +31,18 @@ I decided to bite the dust and rewrite one from scratch by following its API doc
 I could critic, is really confusing to read. It's probably the most confusing API doc I've ever
 read so far).
 
+## Thanks
+
+Huge thank you to [restuwahyu13](https://github.com/restuwahyu13) for developing and publishing a
+[midtrans node server-side client](https://github.com/restuwahyu13/midtrans-node).
+I had just discovered this after this whole rage happened. I'll be using this as an inspiration
+and reference to extend it to be able to be used with Next.
+
 ## Contributing
 
 Any contributions are welcome and highly appreciated! :)
 
 ## License
 
-The project is FLOSS, you or the midtrans team can do anything with it as long as it adheres
-to the [GNU General Public License v3.0](https://opensource.org/license/gpl-3-0).
+The project is FLOSS, anyone can do anything with it as long as it adheres to the
+[GNU General Public License v3.0](https://opensource.org/license/gpl-3-0).
