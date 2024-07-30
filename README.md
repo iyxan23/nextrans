@@ -10,6 +10,7 @@ future.
 ## Goals
 
  - TypeScript-first in any aspect.
+ - Use modern libraries and techniques.
  - Make integrating midtrans a breeze for NextJS projects.
  - Abstract away the complexities of the midtrans APIs.
 
