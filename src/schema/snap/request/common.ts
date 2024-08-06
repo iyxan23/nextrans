@@ -61,7 +61,7 @@ export const InstallmentOptions = z.object({
   terms: z.record(z.string(), z.array(z.number())),
 });
 
-export const vaOptions = z.object({ va_number: z.boolean() });
+export const VaOptions = z.object({ va_number: z.boolean() });
 
 export const Transaction = z.object({
   transaction_details: TransactionDetailOptions,
