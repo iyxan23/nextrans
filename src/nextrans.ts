@@ -1,4 +1,11 @@
-import { ConfigurationError } from "./error";
+import { z } from "zod";
+import {
+  ConfigurationError,
+  MidtransError,
+  NextransError,
+  UnauthorizedError,
+} from "./error";
+import { type Transaction } from "./schema/snap/request/common";
 
 type EnvironmentType = "sandbox" | "production";
 
@@ -55,5 +62,56 @@ export class Nextrans {
     }
 
     if (opts.baseUrl) this.baseUrl = opts.baseUrl;
+  }
+
+  private async post(
+    endpoint: string,
+    body: any,
+    headers?: Record<string, string>,
+  ): Promise<Response> {
+    return this.fetch(this.baseUrl + endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization:
+          "Basic " +
+          Buffer.from(this.accessKeys.serverKey + ":").toString("base64"),
+        ...headers,
+      },
+      body: JSON.stringify(body),
+    }).then(async (response) => {
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new UnauthorizedError("Access Keys are invalid");
+        }
+
+        if (response.status > 400 && response.status < 500) {
+          const json = await response.json();
+          throw new NextransError(json.message);
+        }
+
+        throw new MidtransError(
+          "Something went wrong on Midtrans' side, please try again later",
+        );
+      }
+
+      return response;
+    });
+  }
+
+  async createSnapTransaction(
+    transaction: z.infer<typeof Transaction>,
+  ): Promise<{ token: string; redirect_url: string }> {
+    return this.post("/snap/v1/transactions", transaction)
+      .then((r) => r.json())
+      .then((json) =>
+        z
+          .object({
+            token: z.string(),
+            redirect_url: z.string(),
+          })
+          .parseAsync(json),
+      );
   }
 }
