@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["es2023", "dom"],
+    "module": "es2022",
+    "target": "es5",
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+  },
+  "exclude": [
+    "node_modules/",
+    "dist/"
+  ]
+}
