@@ -65,7 +65,7 @@ export const VaOptions = z.object({ vaNumber: z.boolean() });
 
 export const Transaction = z.object({
   transactionDetails: TransactionDetailOptions,
-  itemDetails: ItemDetailsOptions.optional(),
+  itemDetails: ItemDetailsOptions.array().optional(),
   customerDetails: CustomerDetailOptions.optional(),
   shippingAddress: ShippingDetailOptions.optional(),
   enabledPayments: z.array(z.string()).optional(),
