@@ -2,7 +2,15 @@
   "name": "nextrans",
   "version": "0.0.1",
   "description": "A midtrans client implementation for Next.js applications",
-  "scripts": {},
+  "type": "module",
+  "scripts": {
+    "watch": "parcel watch",
+    "build": "parcel build"
+  },
+  "source": "src/index.ts",
+  "main": "dist/main.js",
+  "module": "dist/module.js",
+  "types": "dist/types.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iyxan23/nextrans.git"
@@ -26,8 +34,11 @@
   },
   "homepage": "https://github.com/iyxan23/nextrans#readme",
   "devDependencies": {
+    "@parcel/packager-ts": "^2.12.0",
+    "@parcel/transformer-typescript-types": "^2.12.0",
     "parcel": "^2.12.0",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4"
-  }
+  },
+  "sideEffects": false
 }
