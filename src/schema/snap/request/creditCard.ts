@@ -6,15 +6,15 @@ import {
 } from "./common";
 
 export const CreditCardOptions = z.object({
-  creditCard: z
+  credit_card: z
     .object({
       secure: z.boolean().optional(),
       bank: z.string(),
       channel: z.string().optional(),
       type: z.string().optional(),
-      whitelistBins: z.array(z.string()).optional(),
+      whitelist_bins: z.array(z.string()).optional(),
       installment: InstallmentOptions.optional(),
-      dynamicDescriptor: DynamicDescriptorOptions.optional(),
+      dynamic_descriptor: DynamicDescriptorOptions.optional(),
     })
     .optional(),
 });

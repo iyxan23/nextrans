@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { Transaction, VaOptions } from "./common";
+import { Transaction } from "./common";
 
 export const BcaOptions = z
   .object({
-    vaNumber: z.number(),
-    subCompanyCode: z.string().optional(),
-    freeText: z
+    va_number: z.number(),
+    sub_company_code: z.string().optional(),
+    free_text: z
       .object({
         inquiry: z.record(z.string(), z.string()),
         payment: z.record(z.string(), z.string()),
@@ -15,5 +15,5 @@ export const BcaOptions = z
   .optional();
 
 export const SnapBcaVirtualAccount = Transaction.extend({
-  bcaVa: BcaOptions,
+  bca_va: BcaOptions,
 });

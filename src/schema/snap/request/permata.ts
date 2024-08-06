@@ -2,10 +2,10 @@ import { z } from "zod";
 import { Transaction } from "./common";
 
 export const PermataVirtualAccountOptions = z.object({
-  permataVa: z
+  permata_va: z
     .object({
-      vaNumber: z.boolean(),
-      recipientName: z.string().optional(),
+      va_number: z.boolean(),
+      recipient_name: z.string().optional(),
     })
     .optional(),
 });
