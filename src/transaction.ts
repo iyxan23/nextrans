@@ -21,23 +21,28 @@ export class TransactionBuilder {
 
   setDetails(transactionDetails: z.infer<typeof TransactionDetailOptions>) {
     this.transactionDetails = transactionDetails;
+    return this;
   }
 
   setAllItems(itemDetails: z.infer<typeof ItemDetailsOptions>[]) {
     this.itemDetails = itemDetails;
+    return this;
   }
 
   addItem(itemDetails: z.infer<typeof ItemDetailsOptions>) {
     if (!this.itemDetails) this.itemDetails = [];
     this.itemDetails.push(itemDetails);
+    return this;
   }
 
   setCustomer(customerDetails: z.infer<typeof CustomerDetailOptions>) {
     this.customerDetails = customerDetails;
+    return this;
   }
 
   setShippingAddress(shippingAddress: z.infer<typeof ShippingDetailOptions>) {
     this.customerShippingAddress = shippingAddress;
+    return this;
   }
 
   setBillingAddress(billlingAddress: z.infer<typeof BillingAddressOptions>) {
