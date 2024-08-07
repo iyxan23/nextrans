@@ -5,6 +5,7 @@ import {
   type ItemDetailsOptions,
   type CustomerDetailOptions,
   type ShippingDetailOptions,
+  type BillingAddressOptions,
 } from "./schema/snap/request/common";
 import { ConfigurationError } from "./error";
 
@@ -12,10 +13,11 @@ export class TransactionBuilder {
   private transactionDetails?: z.infer<typeof TransactionDetailOptions>;
   private itemDetails?: z.infer<typeof ItemDetailsOptions>[];
   private customerDetails?: z.infer<typeof CustomerDetailOptions>;
-  private shippingAddress?: z.infer<typeof ShippingDetailOptions>;
+  private customerShippingAddress?: z.infer<typeof ShippingDetailOptions>;
+  private customerBillingAddress?: z.infer<typeof BillingAddressOptions>;
   private enabledPayments?: string[];
 
-  constructor() {}
+  constructor() { }
 
   setDetails(transactionDetails: z.infer<typeof TransactionDetailOptions>) {
     this.transactionDetails = transactionDetails;
@@ -34,8 +36,13 @@ export class TransactionBuilder {
     this.customerDetails = customerDetails;
   }
 
-  setShipping(shippingAddress: z.infer<typeof ShippingDetailOptions>) {
-    this.shippingAddress = shippingAddress;
+  setShippingAddress(shippingAddress: z.infer<typeof ShippingDetailOptions>) {
+    this.customerShippingAddress = shippingAddress;
+  }
+
+  setBillingAddress(billlingAddress: z.infer<typeof BillingAddressOptions>) {
+    this.customerBillingAddress = billlingAddress;
+    return this;
   }
 
   addEnabledPayments(...enabledPayments: string[]) {
@@ -43,6 +50,7 @@ export class TransactionBuilder {
       ...(this.enabledPayments ?? []),
       ...enabledPayments,
     ];
+    return this;
   }
 
   build(): z.infer<typeof Transaction> {
@@ -50,11 +58,29 @@ export class TransactionBuilder {
       throw new ConfigurationError("Transaction details are required.");
     }
 
+    if (
+      (!!this.customerShippingAddress || !!this.customerBillingAddress) &&
+      !this.customerDetails
+    ) {
+      throw new ConfigurationError(
+        "Customer details are required if shipping or billing address are set.",
+      );
+    }
+
     return {
       transaction_details: this.transactionDetails,
       item_details: this.itemDetails,
-      customer_details: this.customerDetails,
-      shipping_address: this.shippingAddress,
+      customer_details: this.customerDetails
+        ? {
+          ...this.customerDetails,
+          ...(this.customerShippingAddress
+            ? { shipping_address: this.customerShippingAddress }
+            : {}),
+          ...(this.customerBillingAddress
+            ? { billing_address: this.customerBillingAddress }
+            : {}),
+        }
+        : undefined,
       enabled_payments: this.enabledPayments,
     };
   }
