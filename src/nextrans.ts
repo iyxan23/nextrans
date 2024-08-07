@@ -87,12 +87,12 @@ export class Nextrans {
         }
 
         if (response.status > 400 && response.status < 500) {
-          const json = await response.json();
-          throw new NextransError(json.message);
+          const text = await response.text();
+          throw new NextransError(`Error: ${response.status} ${response.statusText}, ${text}`);
         }
 
         throw new MidtransError(
-          "Something went wrong on Midtrans' side, please try again later",
+          `Midtrans Error: ${response.status} ${response.statusText}, ${await response.text()}`,
         );
       }
 
