@@ -1,1 +1,0 @@
-export { Nextrans } from "./nextrans";

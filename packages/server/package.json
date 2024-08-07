@@ -1,0 +1,45 @@
+{
+  "name": "@nextrans/server",
+  "version": "0.0.1",
+  "description": "A midtrans client implementation for Next.js applications",
+  "scripts": {
+    "build": "npx rollup --config rollup.config.ts --configPlugin rollup-plugin-swc3"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/types.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/types.d.ts"
+    },
+    "./transaction": {
+      "require": "./dist/transaction.js",
+      "import": "./dist/transaction.mjs",
+      "types": "./dist/transaction.d.ts"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iyxan23/nextrans.git"
+  },
+  "keywords": [
+    "nextjs",
+    "payment",
+    "payment-gateway",
+    "midtrans",
+    "client"
+  ],
+  "peerDependencies": {
+    "zod": "^3.23.8"
+  },
+  "author": "iyxan23",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/iyxan23/nextrans/issues"
+  },
+  "homepage": "https://github.com/iyxan23/nextrans#readme",
+  "sideEffects": false
+}
