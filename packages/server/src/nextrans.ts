@@ -74,6 +74,11 @@ export class Nextrans {
       baseUrl,
       fetch: customFetch,
     });
+
+    this.snap = new Snap({
+      requester: this.requester,
+      accessKeys: this.accessKeys,
+    });
   }
 
   async createSnapTransaction(
