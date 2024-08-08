@@ -27,11 +27,12 @@ export class Snap {
 
   async createTransaction(
     transaction: z.infer<typeof Transaction>,
-  ): Promise<{ token: string; redirectUrl: string }> {
+  ): Promise<{ token: string; redirect_url: string }> {
     return this.requester
       .post("/snap/v1/transactions", transaction)
+      .then((r) => r.json())
       .then((r) =>
-        z.object({ token: z.string(), redirectUrl: z.string() }).parseAsync(r),
+        z.object({ token: z.string(), redirect_url: z.string() }).parseAsync(r),
       );
   }
 }
