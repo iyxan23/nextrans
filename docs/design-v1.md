@@ -33,22 +33,22 @@ export const snap = nextrans.snap();
 `api/midtrans/snap/route.ts`
 
 ```ts
-import { createSnapPaymentNotificationHandler } from "nextrans/snap";
+import { fetchHandler } from "@nextrans/server/snap/notification/adapter/fetchHandler";
 import { nextrans } from "@/server/nextrans";
 
-const handle = createSnapPaymentNotificationHandler({
-  nextrans,
+const handle = nextrans.snap.createNotificationHandler(
+  fetchHandler({
+    // ... config
 
-  // ... config
+    // payment here is a parsed custom type
+    onPayment: async (payment) => {},
 
-  // payment here is a parsed custom type
-  onPayment: async (payment) => {},
-
-  // when the request coming in is invalid (wrong creds or perhaps midtrans changed their schema)
-  onInvalid: async (request, error) => {
-    // either someone tried faking midtrans or midtrans messed up
-  },
-});
+    // when the request coming in is invalid (wrong creds or perhaps midtrans changed their schema)
+    onInvalid: async (request, error) => {
+      // either someone tried faking midtrans or midtrans messed up
+    },
+  }),
+);
 
 export { handle as POST };
 ```
@@ -63,9 +63,14 @@ import { nextrans } from "@/server/nextrans";
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // ... other stuff
 
-  const transaction = await nextrans.createTransaction({
-
-  });
+  const transaction = await nextrans.snap.createTransaction(
+    new Transaction()
+      .setCustomer({ ... })
+      .setBillingAddress({ ... })
+      .addItem({ ... })
+      .addItem({ ... })
+      .build()
+  );
 
   // insert transaction into db
   await db.insert(transaction).values({
@@ -76,3 +81,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // ... other stuff
 }
 ```
+
+### Tests and stuff
+
+Of course we wan't the APIs to be able to be tested. So we'd need to be able to
+substitute the API-calling backend to be a mock. Something like DI could work.
