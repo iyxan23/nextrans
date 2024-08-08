@@ -1,5 +1,7 @@
 <h1 align=center><pre>nextrans</pre></h1>
 
+[![Node.js CI](https://github.com/iyxan23/nextrans/actions/workflows/node.js.yml/badge.svg?event=push)](https://github.com/iyxan23/nextrans/actions/workflows/node.js.yml)
+
 A typescript-first midtrans client implementation to better integrate Next.js applications.
 
 ## Status
