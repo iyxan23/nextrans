@@ -5,7 +5,7 @@ import {
   NextransError,
   UnauthorizedError,
 } from "./error";
-import { type Transaction } from "./schema/snap/request/common";
+import { type Transaction } from "./snap/schema/request/common";
 
 type EnvironmentType = "sandbox" | "production";
 
