@@ -4,7 +4,7 @@ import { type z } from "zod";
 import { type Requester } from "../../requester";
 import { TransactionNotification } from "./schema/schemas";
 import * as crypto from "crypto";
-import { Transaction } from "src/other/transaction/schema";
+import { Transaction } from "../../other/transaction/schema";
 
 /*
  * An example payment notification as described by midtrans

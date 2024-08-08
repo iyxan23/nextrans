@@ -20,6 +20,11 @@
       "require": "./dist/transaction.js",
       "import": "./dist/transaction.mjs",
       "types": "./dist/transaction.d.ts"
+    },
+    "./snap": {
+      "require": "./dist/snap/index.js",
+      "import": "./dist/snap/index.mjs",
+      "types": "./dist/snap/index.d.ts"
     }
   },
   "repository": {
