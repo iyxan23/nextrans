@@ -80,21 +80,6 @@ export class Nextrans {
       accessKeys: this.accessKeys,
     });
   }
-
-  async createSnapTransaction(
-    transaction: z.infer<typeof Transaction>,
-  ): Promise<{ token: string; redirect_url: string }> {
-    return this.requester.post("/snap/v1/transactions", transaction)
-      .then((r) => r.json())
-      .then((json) =>
-        z
-          .object({
-            token: z.string(),
-            redirect_url: z.string(),
-          })
-          .parseAsync(json),
-      );
-  }
 }
 
 class NextransRequester implements Requester {
