@@ -1,11 +1,9 @@
-import { z } from "zod";
 import {
   ConfigurationError,
   MidtransError,
   NextransError,
   UnauthorizedError,
 } from "./error";
-import { type Transaction } from "./snap/schema/request/common";
 import { Snap } from "./snap";
 import { type Requester } from "./requester";
 
