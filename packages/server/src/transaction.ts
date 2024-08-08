@@ -6,7 +6,7 @@ import {
   type CustomerDetailOptions,
   type ShippingDetailOptions,
   type BillingAddressOptions,
-} from "./schema/snap/request/common";
+} from "./snap/schema/request/common";
 import { ConfigurationError } from "./error";
 
 export class TransactionBuilder {
