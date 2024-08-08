@@ -6,6 +6,10 @@
     "./packages/server",
     "./packages/client"
   ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo watch dev"
+  },
   "dependencies": {
     "@types/node": "^22.1.0",
     "prettier": "^3.3.3",
