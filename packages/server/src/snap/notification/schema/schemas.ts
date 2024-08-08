@@ -57,7 +57,12 @@ export const CardType = z.object({
   channel_response_code: z.string(),
   card_type: z.union([z.literal("Credit"), z.literal("Debit")]),
   bank: z.string(),
-  approval_code: z.string(),
+
+  /**
+   * Can be used to refund a transaction. `approval_code` does not exist on
+   * transactions that are deemed as fraud.
+   */
+  approval_code: z.string().optional(),
 });
 
 const BankVa = z.object({
