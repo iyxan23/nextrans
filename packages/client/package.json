@@ -30,5 +30,8 @@
     "url": "https://github.com/iyxan23/nextrans/issues"
   },
   "homepage": "https://github.com/iyxan23/nextrans#readme",
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "@types/react": "^18.3.3"
+  }
 }
