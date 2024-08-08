@@ -4,6 +4,7 @@ import { type z } from "zod";
 import { type Requester } from "../../requester";
 import { TransactionNotification } from "./schema/schemas";
 import * as crypto from "crypto";
+import { Transaction } from "src/other/transaction/schema";
 
 /*
  * An example payment notification as described by midtrans
@@ -93,21 +94,68 @@ export function createFetchHandler(
   {
     beforeTransactionRecheck,
     processNotification,
-    onInvalid,
+    onInvalidBody,
+    onInvalidSignature,
+    onSuccess,
   }: {
+    /**
+     * Callback performed when notification has successfully been properly validated,
+     * and proven to be authentic. Just before the best-practice transaction fetch to
+     * midtrans.
+     */
     beforeTransactionRecheck?: (
       notification: z.infer<typeof TransactionNotification>,
     ) => Promise<
       { continue: true } | { continue: false; response: Response } | void
     >;
+
+    /**
+     * Callback performed to process the incoming notification, provided with the
+     * same transaction that has been fetched from midtrans itself for "best-practices".
+     *
+     * Take the `transaction` 
+     */
     processNotification?: (
       notification: z.infer<typeof TransactionNotification>,
+      transaction: z.infer<typeof Transaction>,
     ) => Promise<
       { continue: true } | { continue: false; response: Response } | void
     >;
-    onInvalid?: (
+
+    /**
+     * Callback performed when the retrieved notification body is either incorrectly
+     * parsed, or has changed its shape. Essentially, failure to parse the notification
+     * body completely will trigger this callback.
+     *
+     * You can either return `{ continue: true }` (or return nothing) which will return
+     * a 500 to midtrans right away, or give your own response with `{ continue: false,
+     * response: Response }`.
+     */
+    onInvalidBody?: (
+      body: any,
+      request: Request,
+    ) => Promise<
+      { continue: true } | { continue: false; response: Response } | void
+    >;
+
+    /**
+     * Callback performed when the received notification has successfully been parsed,
+     * yet failed to verify its authenticity.
+     */
+    onInvalidSignature?: (
       notification: z.infer<typeof TransactionNotification>,
       request: Request,
+    ) => Promise<
+      { continue: true } | { continue: false; response: Response } | void
+    >;
+
+    /**
+     * Callback performed when the received notification has successfully been parsed,
+     * verified, and processed.
+     */
+    onSuccess: (
+      notification: z.infer<typeof TransactionNotification>,
+      transaction: z.infer<typeof Transaction>,
     ) => Promise<
       { continue: true } | { continue: false; response: Response } | void
     >;
@@ -118,14 +166,27 @@ export function createFetchHandler(
     try {
       body = await req.json();
     } catch (e) {
-      return new Response("No body", { status: 400 });
+      const r = (await onInvalidBody?.(undefined, req)) ?? { continue: true };
+
+      if (!r.continue) return r.response;
+      return new Response("Invalid JSON body", { status: 400 });
     }
 
-    const transaction = await TransactionNotification.parseAsync(body);
+    const transactionParseResult =
+      await TransactionNotification.safeParseAsync(body);
+    if (!transactionParseResult.success) {
+      const r = (await onInvalidBody?.(body, req)) ?? { continue: true };
+
+      if (!r.continue) return r.response;
+      return new Response("Invalid body", { status: 400 });
+    }
+    const transaction = transactionParseResult.data;
 
     // verify the transaction authenticity
     if (!verifyAuthenticity(transaction, serverKey)) {
-      const r = (await onInvalid?.(transaction, req)) ?? { continue: true };
+      const r = (await onInvalidSignature?.(transaction, req)) ?? {
+        continue: true,
+      };
 
       if (!r.continue) return r.response;
       return new Response("Invalid signature", { status: 403 });
@@ -138,11 +199,43 @@ export function createFetchHandler(
     if (!transactionRecheckResult.continue)
       return transactionRecheckResult.response;
 
+    // |======= TODO ======================================================== !!!!!
+    // | Move responsibilities of managing the transaction to another class   !!!!!
+    // |======= TODO ======================================================== !!!!!
+
     // make a request to the status API
     const statusResp = await requester.get(
       `/v2/${transaction.transaction_id}/status`,
       new URLSearchParams(),
     );
+
+    // parse it
+    let transactionStatus;
+    try {
+      const transactionStatusParseResult = await statusResp
+        .json()
+        .then((r) => Transaction.safeParseAsync(r));
+
+      if (!transactionStatusParseResult.success) {
+        console.error("Invalid transaction schema");
+        console.error(transactionStatusParseResult.error);
+
+        return new Response("Internal server error", { status: 500 });
+      }
+
+      transactionStatus = transactionStatusParseResult.data;
+    } catch (e) {
+      console.error("Unable to retrieve json body from transaction API");
+      console.error(e);
+
+      return new Response("Internal server error", { status: 500 });
+    }
+
+    const pr = (await processNotification?.(transaction, transactionStatus)) ?? { continue: true };
+    if (!pr.continue) return pr.response;
+
+    const sr = (await onSuccess?.(transaction, transactionStatus)) ?? { continue: true };
+    if (!sr.continue) return sr.response;
 
     return new Response(null, { status: 200 });
   };
@@ -152,7 +245,6 @@ async function verifyAuthenticity(
   notification: z.infer<typeof TransactionNotification>,
   serverKey: string,
 ): Promise<boolean> {
-
   // signature key is SHA512(order_id+status_code+gross_amount+ServerKey)
   const shouldBe = await crypto.subtle
     .digest(
