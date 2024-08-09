@@ -3,8 +3,7 @@
   "type": "module",
   "packageManager": "npm@10.7.0",
   "workspaces": [
-    "./packages/server",
-    "./packages/client"
+    "./packages/server"
   ],
   "scripts": {
     "build": "turbo run build",
