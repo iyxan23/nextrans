@@ -75,35 +75,29 @@ export const CardType = z.object({
   approval_code: z.string().optional(),
 });
 
-const BankVa = z.object({
-  va_numbers: z.array(
-    z.object({
-      va_number: z.string(),
-      bank: z.string(),
-    }),
-  ),
-  payment_amounts: z.array(
-    z.object({
-      paid_at: z.string(),
-      amount: z.string(),
-    }),
-  ),
-});
-
 const BankTransferType = z.intersection(
   z.object({
     payment_type: z.literal("bank_transfer"),
   }),
-  z.discriminatedUnion("bank", [
+  z.union([
     z.object({
       permata_va_number: z.string(),
       bank: z.literal("permata"),
     }),
-    BankVa.extend({
-      bank: z.literal("bca"),
-    }), BankVa.extend({
-      bank: z.literal("bni"),
-    })
+    z.object({
+      va_numbers: z.array(
+        z.object({
+          va_number: z.string(),
+          bank: z.union([z.literal("bca"), z.literal("bni")]),
+        }),
+      ),
+      payment_amounts: z.array(
+        z.object({
+          paid_at: z.string(),
+          amount: z.string(),
+        }),
+      ),
+    }),
   ]),
 );
 
