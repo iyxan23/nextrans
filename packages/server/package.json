@@ -1,5 +1,5 @@
 {
-  "name": "nextrans-server",
+  "name": "@nextrans/server",
   "version": "0.0.1",
   "description": "A midtrans client implementation for Next.js applications",
   "scripts": {
@@ -13,18 +13,21 @@
     "./package.json": "./package.json",
     ".": {
       "require": "./dist/index.js",
-      "default": "./dist/index.js",
-      "import": "./dist/index.mjs"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
     },
     "./transaction": {
       "require": "./dist/transaction.js",
-      "default": "./dist/transaction.js",
-      "import": "./dist/transaction.mjs"
+      "types": "./dist/transaction.d.ts",
+      "import": "./dist/transaction.mjs",
+      "default": "./dist/transaction.mjs"
     },
     "./snap": {
       "require": "./dist/snap/index.js",
-      "default": "./dist/snap/index.js",
-      "import": "./dist/snap/index.mjs"
+      "types": "./dist/snap/index.d.ts",
+      "import": "./dist/snap/index.mjs",
+      "default": "./dist/snap/index.mjs"
     }
   },
   "repository": {
