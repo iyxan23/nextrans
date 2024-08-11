@@ -1,10 +1,11 @@
 // Sourced from: https://docs.midtrans.com/docs/https-notification-webhooks
 
-import { type z } from "zod";
 import { type Requester } from "../../requester";
 import { TransactionNotification } from "./schema/schemas";
 import * as crypto from "crypto";
 import { Transaction } from "../../other/transaction/schema";
+
+export { type TransactionNotification, type Transaction };
 
 /*
  * An example payment notification as described by midtrans
@@ -86,6 +87,10 @@ import { Transaction } from "../../other/transaction/schema";
  */
 
 export type NotificationHandler<T, R extends Promise<T> | T> = () => R;
+export type HandlerCallbackReturn =
+  | { continue: true }
+  | { continue: false; response: Response }
+  | void;
 
 // will handle checking notification and fetching the transaction
 export function createFetchHandler(
@@ -104,23 +109,19 @@ export function createFetchHandler(
      * midtrans.
      */
     beforeTransactionRecheck?: (
-      notification: z.infer<typeof TransactionNotification>,
-    ) => Promise<
-      { continue: true } | { continue: false; response: Response } | void
-    >;
+      notification: TransactionNotification,
+    ) => Promise<HandlerCallbackReturn>;
 
     /**
      * Callback performed to process the incoming notification, provided with the
      * same transaction that has been fetched from midtrans itself for "best-practices".
      *
-     * Take the `transaction` 
+     * Take the `transaction`
      */
-    processNotification?: (
-      notification: z.infer<typeof TransactionNotification>,
-      transaction: z.infer<typeof Transaction>,
-    ) => Promise<
-      { continue: true } | { continue: false; response: Response } | void
-    >;
+    processNotification: (
+      notification: TransactionNotification,
+      transaction: Transaction,
+    ) => Promise<HandlerCallbackReturn>;
 
     /**
      * Callback performed when the retrieved notification body is either incorrectly
@@ -134,31 +135,25 @@ export function createFetchHandler(
     onInvalidBody?: (
       body: any,
       request: Request,
-    ) => Promise<
-      { continue: true } | { continue: false; response: Response } | void
-    >;
+    ) => Promise<HandlerCallbackReturn>;
 
     /**
      * Callback performed when the received notification has successfully been parsed,
      * yet failed to verify its authenticity.
      */
     onInvalidSignature?: (
-      notification: z.infer<typeof TransactionNotification>,
+      notification: TransactionNotification,
       request: Request,
-    ) => Promise<
-      { continue: true } | { continue: false; response: Response } | void
-    >;
+    ) => Promise<HandlerCallbackReturn>;
 
     /**
      * Callback performed when the received notification has successfully been parsed,
      * verified, and processed.
      */
-    onSuccess: (
-      notification: z.infer<typeof TransactionNotification>,
-      transaction: z.infer<typeof Transaction>,
-    ) => Promise<
-      { continue: true } | { continue: false; response: Response } | void
-    >;
+    onSuccess?: (
+      notification: TransactionNotification,
+      transaction: Transaction,
+    ) => Promise<HandlerCallbackReturn>;
   },
 ): (req: Request) => Promise<Response> {
   return async (req: Request): Promise<Response> => {
@@ -231,10 +226,14 @@ export function createFetchHandler(
       return new Response("Internal server error", { status: 500 });
     }
 
-    const pr = (await processNotification?.(transaction, transactionStatus)) ?? { continue: true };
+    const pr = (await processNotification(transaction, transactionStatus)) ?? {
+      continue: true,
+    };
     if (!pr.continue) return pr.response;
 
-    const sr = (await onSuccess?.(transaction, transactionStatus)) ?? { continue: true };
+    const sr = (await onSuccess?.(transaction, transactionStatus)) ?? {
+      continue: true,
+    };
     if (!sr.continue) return sr.response;
 
     return new Response(null, { status: 200 });
@@ -242,7 +241,7 @@ export function createFetchHandler(
 }
 
 async function verifyAuthenticity(
-  notification: z.infer<typeof TransactionNotification>,
+  notification: TransactionNotification,
   serverKey: string,
 ): Promise<boolean> {
   // signature key is SHA512(order_id+status_code+gross_amount+ServerKey)

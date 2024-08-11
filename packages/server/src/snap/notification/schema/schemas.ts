@@ -26,7 +26,7 @@ const ShopeePayType = z.object({ payment_type: z.literal("shopeepay") });
 const AkulakuType = z.object({ payment_type: z.literal("akulaku") });
 const GopayType = z.object({ payment_type: z.literal("gopay") });
 
-export const QrisType = z.object({
+const QrisType = z.object({
   payment_type: z.literal("qris"),
   transaction_type: z.union([z.literal("on-us"), z.literal("off-us")]),
   issuer: z.string(),
@@ -35,7 +35,7 @@ export const QrisType = z.object({
     .or(z.string()),
 });
 
-export const ConvenienceStoreType = z.intersection(
+const ConvenienceStoreType = z.intersection(
   z.object({
     payment_type: z.literal("cstore"),
     payment_code: z.string(),
@@ -51,7 +51,7 @@ export const ConvenienceStoreType = z.intersection(
   ]),
 );
 
-export const CardType = z.object({
+const CardType = z.object({
   payment_type: z.literal("credit_card"),
 
   /**
@@ -120,3 +120,5 @@ export const TransactionNotification = z.intersection(
     MandiriBillType,
   ]),
 );
+
+export type TransactionNotification = z.infer<typeof TransactionNotification>;

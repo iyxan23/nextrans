@@ -119,3 +119,6 @@ export const Transaction = z.object({
 
   // todo: POINT fields
 });
+
+export type Transaction = z.infer<typeof Transaction>;
+export type TransactionStatus = z.infer<typeof TransactionStatus>;
