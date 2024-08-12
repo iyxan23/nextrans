@@ -9,8 +9,11 @@ import { type Requester } from "./requester";
 
 type EnvironmentType = "sandbox" | "production";
 
-const SANDBOX_BASE_URL = "https://app.sandbox.midtrans.com";
-const PRODUCTION_BASE_URL = "https://app.midtrans.com";
+const SNAP_SANDBOX_BASE_URL = "https://app.sandbox.midtrans.com";
+const SNAP_PRODUCTION_BASE_URL = "https://app.midtrans.com";
+
+const CORE_SANDBOX_BASE_URL = "https://api.sandbox.midtrans.com";
+const CORE_PRODUCTION_BASE_URL = "https://api.midtrans.com";
 
 export interface AccessKeys {
   merchantId: string;
@@ -32,7 +35,8 @@ export class Nextrans {
   private accessKeys: AccessKeys;
   private environment: EnvironmentType;
 
-  private requester: Requester;
+  private snapRequester: Requester;
+  private coreRequester: Requester;
 
   snap: Snap;
 
@@ -40,7 +44,8 @@ export class Nextrans {
     this.environment = opts.environment ?? "sandbox";
 
     let customFetch;
-    let baseUrl;
+    let snapBaseUrl;
+    let coreBaseUrl;
 
     if (typeof fetch === "undefined" && !opts.fetch)
       throw new ConfigurationError(
@@ -52,7 +57,8 @@ export class Nextrans {
     switch (this.environment) {
       case "sandbox":
         this.accessKeys = opts.sandbox;
-        baseUrl = SANDBOX_BASE_URL;
+        snapBaseUrl = SNAP_SANDBOX_BASE_URL;
+        coreBaseUrl = CORE_SANDBOX_BASE_URL;
         break;
 
       case "production":
@@ -61,20 +67,28 @@ export class Nextrans {
             "environment is production, yet production access keys are undefined.",
           );
         this.accessKeys = opts.production;
-        baseUrl = PRODUCTION_BASE_URL;
+        snapBaseUrl = SNAP_PRODUCTION_BASE_URL;
+        coreBaseUrl = CORE_PRODUCTION_BASE_URL;
         break;
     }
 
-    if (opts.baseUrl) baseUrl = opts.baseUrl;
+    if (opts.baseUrl) snapBaseUrl = opts.baseUrl;
 
-    this.requester = new NextransRequester({
+    this.snapRequester = new NextransRequester({
       accessKeys: this.accessKeys,
-      baseUrl,
+      baseUrl: snapBaseUrl,
+      fetch: customFetch,
+    });
+
+    this.coreRequester = new NextransRequester({
+      accessKeys: this.accessKeys,
+      baseUrl: coreBaseUrl,
       fetch: customFetch,
     });
 
     this.snap = new Snap({
-      requester: this.requester,
+      snapRequester: this.snapRequester,
+      coreRequester: this.coreRequester,
       accessKeys: this.accessKeys,
     });
   }
@@ -108,12 +122,12 @@ class NextransRequester implements Requester {
       if (response.status > 400 && response.status < 500) {
         const text = await response.text();
         throw new NextransError(
-          `Error: ${response.status} ${response.statusText}, ${text}`,
+          `Failed fetching ${response.url}.\nError: ${response.status} ${response.statusText}, ${text}`,
         );
       }
 
       throw new MidtransError(
-        `Midtrans Error: ${response.status} ${response.statusText}, ${await response.text()}`,
+        `Failed fetching ${response.url}.\nMidtrans Error: ${response.status} ${response.statusText}, ${await response.text()}`,
       );
     }
 

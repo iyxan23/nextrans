@@ -94,7 +94,7 @@ export type HandlerCallbackReturn =
 
 // will handle checking notification and fetching the transaction
 export function createFetchHandler(
-  requester: Requester,
+  coreRequester: Requester,
   serverKey: string,
   {
     beforeTransactionRecheck,
@@ -199,7 +199,7 @@ export function createFetchHandler(
     // |======= TODO ======================================================== !!!!!
 
     // make a request to the status API
-    const statusResp = await requester.get(
+    const statusResp = await coreRequester.get(
       `/v2/${transaction.transaction_id}/status`,
       new URLSearchParams(),
     );
