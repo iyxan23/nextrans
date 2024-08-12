@@ -16,7 +16,130 @@ future.
  - Make integrating midtrans a breeze for NextJS projects.
  - Abstract away the complexities of the midtrans APIs.
 
-## Background
+## How to use it?
+
+I'm planning to publish nextrans to npmjs, but in the meantime, you could add `iyxan23/nextrans`
+as a git submodule, then include it in your `package.json` as such:
+
+```json
+{
+  "dependencies": {
+    "@nextrans/server": "./nextrans/packages/server",
+  }
+}
+```
+
+To set nextrans up, create a global `Nextrans` instance in a file somewhere:
+
+```ts
+// let's say this is located within `src/app/server/nextrans.ts`
+import { Nextrans } from "@nextrans/server";
+
+export const nextrans = new Nextrans({ ... });
+```
+
+In the instantiation, include your server key and merchant ID retrieved from your Midtrans
+dashboard. Preferrably through an environment variable.
+
+```ts
+// let's say this is located within `src/app/server/nextrans.ts`
+import { Nextrans } from "@nextrans/server";
+
+export const nextrans = new Nextrans({
+  sandbox: {
+    serverKey: process.env.MIDTRANS_SANDBOX_SERVER_KEY,
+    merchantId: process.env.MIDTRANS_SANDBOX_MERCHANT_ID,
+  },
+  /* place in production keys when `sandbox` is "production"
+  production: {
+    serverKey: process.env.MIDTRANS_PRODUCTION_SERVER_KEY,
+    merchantId: process.env.MIDTRANS_PRODUCTION_MERCHANT_ID,
+  },
+  */
+  environment: "sandbox", // or "production"
+
+  // or you could do something like
+  //
+  //   environment: process.env.NODE_ENV === "production" ? "production" : "sandbox"
+});
+```
+
+And nextrans is set-up!
+
+### Creating a SNAP Transaction
+
+Creating a transaction in nextrans is straightforward. Use the built-in `TransactionBuilder`
+to easily work your way through data.
+
+Here's an example for a `route.ts` API file with `zod`:
+
+```ts
+import { nextrans } from "~/server/nextrans"; // previous file
+import { type NextRequest, NextResponse } from "next/server";
+
+const Request = z.object({
+  // ...data
+});
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const payload = await req.json().then((j) => Request.parseAsync(j));
+
+  const { token, redirectUrl } = await nextrans.snap.createTransaction(
+    new TransactionBuilder()
+       .setCustomer({
+         first_name: payload.firstName,
+         last_name: payload.lastName,
+         email: payload.email,
+         phone: payload.phoneNumber,
+       })
+       .setDetails({
+         order_id: nanoid(),
+         gross_amount: 50_000, // pay 50k
+       })
+       // other APIs you might be interested with:
+       //
+       //   .setAllItems({ ... })
+       //   .addItem({ ... })
+       //   .setShippingAddress({ ... })
+       //   .setBillingAddress({ ... })
+       //
+      .build()
+  );
+
+   // store `token` somewhere in a database
+
+   return NextResponse.redirect(redirectUrl);
+}
+```
+
+### Listen to SNAP notifications
+
+Any events related to transactions as they get created, paid, expired, or deemed as
+fraud will be notified by midtrans through an endpoint you define.
+
+Nextrans makes it easy to focus on your transactions rather than dealing with parsing
+or verification.
+
+Use `nextrans.snap.createNotificationHander` to create a route handler which you can
+export as `POST` in a `route.ts` file:
+
+```ts
+// @file /app/api/midtrans/route.ts
+const handler = nextrans.snap.createNotificationHandler({
+  processPayment: async (notification, transaction) => {
+    // use `transaction` as source of truth, `notification` is the notification itself
+    // that is sent by midtrans
+  }
+});
+
+export { handler as POST };
+```
+
+These are currently the only tested APIs implemented in nextrans. I have plans to
+develop further by adding in core APIs and such in later releases, or when I need
+to use them.
+
+## Why does this exist?
 
 Midtrans is an awesome platform where developers like us will never need to worry about
 processing transactions in such a secure and convenient way.
@@ -41,7 +164,7 @@ Huge thank you to [restuwahyu13](https://github.com/restuwahyu13) for developing
 I had just discovered this after this whole rage happened. I'll be using this as an inspiration
 and reference to extend it to be able to be used with Next.
 
-## Contributing
+## Want to help?
 
 Any contributions are welcome and highly appreciated! :)
 
