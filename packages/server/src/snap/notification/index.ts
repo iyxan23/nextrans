@@ -1,11 +1,8 @@
 // Sourced from: https://docs.midtrans.com/docs/https-notification-webhooks
 
-import { type Requester } from "../../requester";
-import { TransactionNotification } from "./schema/schemas";
-import * as crypto from "crypto";
 import { Transaction } from "../../other/transaction/schema";
-
-export { type TransactionNotification, type Transaction };
+import { type Requester } from "../../requester";
+import * as crypto from "crypto";
 
 /*
  * An example payment notification as described by midtrans
@@ -109,7 +106,7 @@ export function createFetchHandler(
      * midtrans.
      */
     beforeTransactionRecheck?: (
-      notification: TransactionNotification,
+      notification: Transaction,
     ) => Promise<HandlerCallbackReturn>;
 
     /**
@@ -119,7 +116,7 @@ export function createFetchHandler(
      * Take the `transaction`
      */
     processNotification: (
-      notification: TransactionNotification,
+      notification: Transaction,
       transaction: Transaction,
     ) => Promise<HandlerCallbackReturn>;
 
@@ -142,7 +139,7 @@ export function createFetchHandler(
      * yet failed to verify its authenticity.
      */
     onInvalidSignature?: (
-      notification: TransactionNotification,
+      notification: Transaction,
       request: Request,
     ) => Promise<HandlerCallbackReturn>;
 
@@ -151,7 +148,7 @@ export function createFetchHandler(
      * verified, and processed.
      */
     onSuccess?: (
-      notification: TransactionNotification,
+      notification: Transaction,
       transaction: Transaction,
     ) => Promise<HandlerCallbackReturn>;
   },
@@ -167,8 +164,7 @@ export function createFetchHandler(
       return new Response("Invalid JSON body", { status: 400 });
     }
 
-    const transactionParseResult =
-      await TransactionNotification.safeParseAsync(body);
+    const transactionParseResult = await Transaction.safeParseAsync(body);
     if (!transactionParseResult.success) {
       const r = (await onInvalidBody?.(body, req)) ?? { continue: true };
 
@@ -241,7 +237,7 @@ export function createFetchHandler(
 }
 
 async function verifyAuthenticity(
-  notification: TransactionNotification,
+  notification: Transaction,
   serverKey: string,
 ): Promise<boolean> {
   // signature key is SHA512(order_id+status_code+gross_amount+ServerKey)
