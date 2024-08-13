@@ -38,7 +38,6 @@ export class Snap {
   ): Promise<{ token: string; redirect_url: string }> {
     return this.snapRequester
       .post("/snap/v1/transactions", transaction)
-      .then((r) => r.json())
       .then((r) =>
         z.object({ token: z.string(), redirect_url: z.string() }).parseAsync(r),
       );

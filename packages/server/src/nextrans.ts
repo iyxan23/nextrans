@@ -113,6 +113,16 @@ class NextransRequester implements Requester {
     this.fetch = fetch_;
   }
 
+  private async tryJson(response: Response): Promise<any> {
+    try {
+      return await response.json();
+    } catch (e) {
+      throw new MidtransError(
+        `Failed fetching ${response.url}, content is not JSON.\nMidtrans Error: ${response.status} ${response.statusText}, ${await response.text()}`,
+      );
+    }
+  }
+
   private async failEarly(response: Response): Promise<Response> {
     if (!response.ok) {
       if (response.status === 401) {
@@ -131,14 +141,14 @@ class NextransRequester implements Requester {
       );
     }
 
-    return response;
+    return this.tryJson(response);
   }
 
   async post(
     endpoint: string,
     body: any,
     headers?: Record<string, string>,
-  ): Promise<Response> {
+  ): Promise<any> {
     return this.fetch(this.baseUrl + endpoint, {
       method: "POST",
       headers: {
@@ -157,7 +167,7 @@ class NextransRequester implements Requester {
     endpoint: string,
     params: URLSearchParams,
     headers?: Record<string, string>,
-  ): Promise<Response> {
+  ): Promise<any> {
     return this.fetch(this.baseUrl + endpoint + "?" + params.toString(), {
       method: "GET",
       headers: {

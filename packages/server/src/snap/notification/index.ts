@@ -203,9 +203,8 @@ export function createFetchHandler(
     // parse it
     let transactionStatus;
     try {
-      const transactionStatusParseResult = await statusResp
-        .json()
-        .then((r) => Transaction.safeParseAsync(r));
+      const transactionStatusParseResult =
+        await Transaction.safeParseAsync(statusResp);
 
       if (!transactionStatusParseResult.success) {
         console.error("Invalid transaction schema");
