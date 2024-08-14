@@ -32,7 +32,10 @@ function types({ input, packageDir }: Options): RollupOptions {
       }),
       typescript({
         tsconfig: path.resolve(packageDir, "tsconfig.json"),
-        tsconfigOverride: { emitDeclarationOnly: true },
+        tsconfigOverride: {
+          emitDeclarationOnly: true,
+          exclude: ["**/*.test.ts"],
+        },
         abortOnError: !isWatchMode,
       }),
     ],
