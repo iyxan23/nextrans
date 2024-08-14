@@ -165,7 +165,7 @@ const BankTransferType = z.intersection(
       va_numbers: z.array(
         z.object({
           va_number: z.string(),
-          bank: z.union([z.literal("bca"), z.literal("bni")]),
+          bank: z.union([z.literal("bca"), z.literal("bni"), z.literal("cimb")]),
         }),
       ),
       payment_amounts: z.array(
