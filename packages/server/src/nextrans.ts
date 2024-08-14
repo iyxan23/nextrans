@@ -113,7 +113,7 @@ class NextransRequester implements Requester {
     this.fetch = fetch_;
   }
 
-  private async tryJson(response: Response): Promise<any> {
+  private static async tryJson(response: Response): Promise<any> {
     try {
       return await response.json();
     } catch (e) {
@@ -123,7 +123,7 @@ class NextransRequester implements Requester {
     }
   }
 
-  private async failEarly(response: Response): Promise<Response> {
+  private static async failEarly(response: Response): Promise<Response> {
     if (!response.ok) {
       if (response.status === 401) {
         throw new UnauthorizedError("Access Keys are invalid");
@@ -141,7 +141,7 @@ class NextransRequester implements Requester {
       );
     }
 
-    return this.tryJson(response);
+    return NextransRequester.tryJson(response);
   }
 
   async post(
@@ -160,7 +160,7 @@ class NextransRequester implements Requester {
         ...headers,
       },
       body: JSON.stringify(body),
-    }).then(this.failEarly);
+    }).then(NextransRequester.failEarly);
   }
 
   async get(
@@ -178,6 +178,6 @@ class NextransRequester implements Requester {
           Buffer.from(this.accessKeys.serverKey + ":").toString("base64"),
         ...headers,
       },
-    }).then(this.failEarly);
+    }).then(NextransRequester.failEarly);
   }
 }
