@@ -167,8 +167,3 @@ and reference to extend it to be able to be used with Next.
 ## Want to help?
 
 Any contributions are welcome and highly appreciated! :)
-
-## License
-
-The project is FLOSS, anyone can do anything with it as long as it adheres to the
-[GNU General Public License v3.0](https://opensource.org/license/gpl-3-0).
