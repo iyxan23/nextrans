@@ -1,169 +1,202 @@
 <h1 align=center><pre>nextrans</pre></h1>
 
-[![Node.js CI](https://github.com/iyxan23/nextrans/actions/workflows/node.js.yml/badge.svg?event=push)](https://github.com/iyxan23/nextrans/actions/workflows/node.js.yml)
+<p align="center">
+  <a href="https://github.com/iyxan23/nextrans/actions/workflows/node.js.yml">
+    <img src="https://github.com/iyxan23/nextrans/actions/workflows/node.js.yml/badge.svg?event=push" alt="Node.js CI Status" />
+  </a>
+</p>
 
-A typescript-first midtrans client implementation to better integrate Next.js applications.
+<p align="center">
+  A modern, TypeScript-first Midtrans client designed to make payment
+  integrations in Next.js applications a breeze.
+</p>
 
-## Status
+---
 
-`nextrans` is in development, and will probably not be ready in production use in the near
-future.
+## 🤔 Why nextrans?
 
-## Goals
+`nextrans` was born out of a need for a more modern and developer-friendly way
+to integrate Midtrans payments into Next.js projects. We aim to abstract away
+the complexities of the Midtrans API, providing a clean, intuitive, and
+type-safe library to streamline the experience of handling transactions.
+So you can focus on what matters most: _your application logic_!
 
- - TypeScript-first in any aspect.
- - Use modern libraries and techniques.
- - Make integrating midtrans a breeze for NextJS projects.
- - Abstract away the complexities of the midtrans APIs.
+## 🚧 Project Status
 
-## How to use it?
+**`nextrans` is currently in active development.**
 
-I'm planning to publish nextrans to npmjs, but in the meantime, you could add `iyxan23/nextrans`
-as a git submodule, then include it in your `package.json` as such:
+While it's shaping up to be a powerful tool, it may not be ready for production
+use just yet. We're working hard to stabilize the API and add more features.
+We welcome contributors to help us get there faster!
+
+## 🚀 Getting Started
+
+### 1. Installation
+
+We plan to publish `nextrans` to NPM soon. In the meantime, you can use it in
+your project by adding it as a git submodule:
+
+```bash
+# Add the repository as a submodule
+git submodule add https://github.com/iyxan23/nextrans.git nextrans
+```
+
+Then, include it in your `package.json` dependencies:
 
 ```json
 {
   "dependencies": {
-    "@nextrans/server": "./nextrans/packages/server",
+    "@nextrans/server": "./nextrans/packages/server"
   }
 }
 ```
 
-To set nextrans up, create a global `Nextrans` instance in a file somewhere:
+### 2. Configuration
+
+First, create a global `Nextrans` instance. It's best to do this in a single
+file and export it for use throughout your server-side code.
 
 ```ts
-// let's say this is located within `src/app/server/nextrans.ts`
-import { Nextrans } from "@nextrans/server";
-
-export const nextrans = new Nextrans({ ... });
-```
-
-In the instantiation, include your server key and merchant ID retrieved from your Midtrans
-dashboard. Preferrably through an environment variable.
-
-```ts
-// let's say this is located within `src/app/server/nextrans.ts`
+// src/lib/nextrans.ts
 import { Nextrans } from "@nextrans/server";
 
 export const nextrans = new Nextrans({
+  // Use sandbox for development and testing
   sandbox: {
-    serverKey: process.env.MIDTRANS_SANDBOX_SERVER_KEY,
-    merchantId: process.env.MIDTRANS_SANDBOX_MERCHANT_ID,
+    serverKey: process.env.MIDTRANS_SANDBOX_SERVER_KEY!,
+    merchantId: process.env.MIDTRANS_SANDBOX_MERCHANT_ID!,
   },
-  /* place in production keys when `sandbox` is "production"
-  production: {
-    serverKey: process.env.MIDTRANS_PRODUCTION_SERVER_KEY,
-    merchantId: process.env.MIDTRANS_PRODUCTION_MERCHANT_ID,
-  },
-  */
-  environment: "sandbox", // or "production"
 
-  // or you could do something like
-  //
-  //   environment: process.env.NODE_ENV === "production" ? "production" : "sandbox"
+  // Use production keys when you're ready to go live
+  production: {
+    serverKey: process.env.MIDTRANS_PRODUCTION_SERVER_KEY!,
+    merchantId: process.env.MIDTRANS_PRODUCTION_MERCHANT_ID!,
+  },
+
+  // Easily switch between environments
+  environment: process.env.NODE_ENV === "production" ? "production" : "sandbox",
 });
 ```
 
-And nextrans is set-up!
+> **Note:** Remember to store your `serverKey` and `merchantId` securely in
+> environment variables and never expose them on the client-side.
 
-### Creating a SNAP Transaction
+### 3. Creating a SNAP Transaction
 
-Creating a transaction in nextrans is straightforward. Use the built-in `TransactionBuilder`
-to easily work your way through data.
-
-Here's an example for a `route.ts` API file with `zod`:
+Creating a transaction is simple and intuitive with the built-in
+`TransactionBuilder`. Here's an example of how you might create a transaction
+in a Next.js Route Handler:
 
 ```ts
-import { nextrans } from "~/server/nextrans"; // previous file
+// app/api/checkout/route.ts
+import { nextrans } from "@/lib/nextrans"; // The file from the previous step
+import { TransactionBuilder } from "@nextrans/server";
+import { nanoid } from "nanoid";
 import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
+// Example validation with Zod
 const Request = z.object({
-  // ...data
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  phoneNumber: z.string(),
+  // ... other data you might need
 });
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  const payload = await req.json().then((j) => Request.parseAsync(j));
+export async function POST(req: NextRequest) {
+  const payload = await Request.parseAsync(await req.json());
 
   const { token, redirectUrl } = await nextrans.snap.createTransaction(
     new TransactionBuilder()
-       .setCustomer({
-         first_name: payload.firstName,
-         last_name: payload.lastName,
-         email: payload.email,
-         phone: payload.phoneNumber,
-       })
-       .setDetails({
-         order_id: nanoid(),
-         gross_amount: 50_000, // pay 50k
-       })
-       // other APIs you might be interested with:
-       //
-       //   .setAllItems({ ... })
-       //   .addItem({ ... })
-       //   .setShippingAddress({ ... })
-       //   .setBillingAddress({ ... })
-       //
-      .build()
+      .setCustomer({
+        first_name: payload.firstName,
+        last_name: payload.lastName,
+        email: payload.email,
+        phone: payload.phoneNumber,
+      })
+      .setDetails({
+        order_id: nanoid(), // Generate a unique order ID
+        gross_amount: 50_000, // The total amount to be paid
+      })
+      // You can also add items, shipping details, and more!
+      // .addItem({ id: 'P01', price: 50000, quantity: 1, name: 'My Product' })
+      // .setShippingAddress({ ... })
+      // .setBillingAddress({ ... })
+      .build(),
   );
 
-   // store `token` somewhere in a database
+  // TODO: Store the `token` and `order_id` in your database to track the transaction.
 
-   return NextResponse.redirect(redirectUrl);
+  // Redirect the user to the Midtrans payment page
+  return NextResponse.redirect(redirectUrl);
 }
 ```
 
-### Listen to SNAP notifications
+### 4. Handling SNAP Notifications
 
-Any events related to transactions as they get created, paid, expired, or deemed as
-fraud will be notified by midtrans through an endpoint you define.
+Midtrans uses webhook notifications to inform your application about transaction
+events (e.g., payment success, failure, expiry). `nextrans` makes it easy to
+handle these securely.
 
-Nextrans makes it easy to focus on your transactions rather than dealing with parsing
-or verification.
-
-Use `nextrans.snap.createNotificationHander` to create a route handler which you can
-export as `POST` in a `route.ts` file:
+Use `nextrans.snap.createNotificationHandler` to create a Route Handler that
+automatically verifies and parses incoming notifications.
 
 ```ts
-// @file /app/api/midtrans/route.ts
+// app/api/midtrans-notifications/route.ts
+import { nextrans } from "@/lib/nextrans";
+
 const handler = nextrans.snap.createNotificationHandler({
+  // This function is called when a payment notification is received and verified.
   processPayment: async (notification, transaction) => {
-    // use `transaction` as source of truth, `notification` is the notification itself
-    // that is sent by midtrans
-  }
+    // `transaction` is the latest transaction status fetched from Midtrans (source of truth).
+    // `notification` is the raw notification object sent by Midtrans.
+
+    console.log(
+      `Transaction ${transaction.order_id} status: ${transaction.transaction_status}`,
+    );
+
+    // TODO: Update your database based on the transaction status.
+    // For example, if transaction.transaction_status is 'settlement', mark the order as paid.
+  },
 });
 
 export { handler as POST };
 ```
 
-These are currently the only tested APIs implemented in nextrans. I have plans to
-develop further by adding in core APIs and such in later releases, or when I need
-to use them.
+> **Important:** Make sure to set your "Payment Notification URL" in your
+> Midtrans dashboard to point to this endpoint (e.g., `https://your-domain.com/api/midtrans-notifications`).
 
-## Why does this exist?
+## 📊 Feature Matrix
 
-Midtrans is an awesome platform where developers like us will never need to worry about
-processing transactions in such a secure and convenient way.
+Here's a rough overview of what is planned for `nextrans`:
 
-It came as a surprise to me as the [official nodejs client](https://github.com/Midtrans/midtrans-nodejs-client)
-was never maintained properly, still uses Javascript without type definitions despite
-TypeScript being the dominant language among Next.js developers, and its terrible
-integration with modern frameworks like Next.js.
+> Icons: 🙅 _Nothing yet_, 🚧 _Under Heavy Construction_ Unusable, 🎛️ _In Development_ Partially usable, ✅ _Done_ Stable
 
-It's somewhat saddening seeing the slow rate adoption of modern javascript framework
-throughout Indonesia. I hope the existence of this project will better influence the
-future of the web development space.
+| Feature          | Description                                                                             | Status |
+| ---------------- | --------------------------------------------------------------------------------------- | :----: |
+| SNAP API         | Midtrans' API to handle transactions quickly and easily                                 |   🎛️   |
+| Core API         | Midtrans' barebone API that handles transactions at a lower level                       |   🚧   |
+| Payouts API      | Midtrans' disbursement API                                                              |   🙅   |
+| Payment Link API | Midtrans' (Beta) API of generating secure payment links                                 |   🙅   |
+| Invoicing API    | Midtrans' API to generate e-invoices                                                    |   🙅   |
+| Any BI-SNAP API  | BI-SNAP (Bank Indonesia - Standar Nasional Open API Pembayaran) API exposed by Midtrans |   🙅   |
 
-I decided to bite the dust and rewrite one from scratch by following its API docs (which if
-I could critic, is really confusing to read. It's probably the most confusing API doc I've ever
-read so far).
+## 🤝 Want to help?
 
-## Thanks
+Contributions are what make the open-source community such an amazing place to
+learn, inspire, and create. Any contributions you make are **greatly appreciated**!
 
-Huge thank you to [restuwahyu13](https://github.com/restuwahyu13) for developing and publishing a
-[midtrans node server-side client](https://github.com/restuwahyu13/midtrans-node).
-I had just discovered this after this whole rage happened. I'll be using this as an inspiration
-and reference to extend it to be able to be used with Next.
+Feel free to open an issue to discuss a new feature or bug, or submit a pull
+request.
 
-## Want to help?
+## 🙏 Acknowledgements
 
-Any contributions are welcome and highly appreciated! :)
+A huge thank you to [restuwahyu13](https.github.com/restuwahyu13) for his
+[midtrans-node](https://github.com/restuwahyu13/midtrans-node) client, which
+served as a great inspiration and reference for this project.
+
+## 📜 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE)
+file for details.
