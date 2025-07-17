@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Transaction } from "./common";
+import { SnapTransaction } from "./common";
 
 export const PermataVirtualAccountOptions = z.object({
   permata_va: z
@@ -10,6 +10,6 @@ export const PermataVirtualAccountOptions = z.object({
     .optional(),
 });
 
-export const SnapPermataVirtualAccountObject = Transaction.merge(
+export const SnapPermataVirtualAccountObject = SnapTransaction.merge(
   PermataVirtualAccountOptions,
 );

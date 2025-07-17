@@ -1,3 +1,3 @@
-import { Transaction } from "./common";
+import { SnapTransaction } from "./common";
 
-export const SnapMandiriVirtualAccount = Transaction
+export const SnapMandiriVirtualAccount = SnapTransaction

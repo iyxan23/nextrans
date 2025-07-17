@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Transaction } from "./common";
+import { SnapTransaction } from "./common";
 
 export const BcaOptions = z
   .object({
@@ -14,6 +14,6 @@ export const BcaOptions = z
   })
   .optional();
 
-export const SnapBcaVirtualAccount = Transaction.extend({
+export const SnapBcaVirtualAccount = SnapTransaction.extend({
   bca_va: BcaOptions,
 });

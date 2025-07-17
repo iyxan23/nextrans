@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   DynamicDescriptorOptions,
   InstallmentOptions,
-  Transaction,
+  SnapTransaction,
 } from "./common";
 
 export const CreditCardOptions = z.object({
@@ -19,4 +19,4 @@ export const CreditCardOptions = z.object({
     .optional(),
 });
 
-export const SnapCreditCard = Transaction.merge(CreditCardOptions);
+export const SnapCreditCard = SnapTransaction.merge(CreditCardOptions);

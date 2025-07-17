@@ -9,7 +9,7 @@ import {
   DynamicDescriptorOptions,
   ItemDetailsOptions,
   ShippingDetailOptions,
-  TransactionDetailOptions,
+  SnapTransactionDetailOptions,
 } from "./request/common";
 import { SnapShopeePay } from "./request/shopeePay";
 import { CreditCardOptions } from "./request/creditCard";
@@ -38,7 +38,7 @@ export const ExpiryOptions = z
   }));
 
 export const SnapFull = z.object({
-  transactionDetails: TransactionDetailOptions,
+  transactionDetails: SnapTransactionDetailOptions,
   itemDetails: ItemDetailsOptions.optional(),
   customerDetails: CustomerDetailOptions.optional(),
   shippingAddress: ShippingDetailOptions.optional(),

@@ -1,16 +1,15 @@
 import { type z } from "zod";
 import {
-  type TransactionDetailOptions,
-  type Transaction,
+  type SnapTransactionDetailOptions,
+  type SnapTransaction,
   type ItemDetailsOptions,
   type CustomerDetailOptions,
   type ShippingDetailOptions,
   type BillingAddressOptions,
 } from "./snap/schema/request/common";
-import { ConfigurationError } from "./error";
 
 export class TransactionBuilder {
-  private transactionDetails?: z.infer<typeof TransactionDetailOptions>;
+  private transactionDetails?: z.infer<typeof SnapTransactionDetailOptions>;
   private itemDetails?: z.infer<typeof ItemDetailsOptions>[];
   private customerDetails?: z.infer<typeof CustomerDetailOptions>;
   private customerShippingAddress?: z.infer<typeof ShippingDetailOptions>;
@@ -19,7 +18,7 @@ export class TransactionBuilder {
 
   constructor() { }
 
-  setDetails(transactionDetails: z.infer<typeof TransactionDetailOptions>) {
+  setDetails(transactionDetails: z.infer<typeof SnapTransactionDetailOptions>) {
     this.transactionDetails = transactionDetails;
     return this;
   }
@@ -58,16 +57,16 @@ export class TransactionBuilder {
     return this;
   }
 
-  build(): z.infer<typeof Transaction> {
+  build(): z.infer<typeof SnapTransaction> {
     if (!this.transactionDetails) {
-      throw new ConfigurationError("Transaction details are required.");
+      throw new Error("Transaction details are required.");
     }
 
     if (
       (!!this.customerShippingAddress || !!this.customerBillingAddress) &&
       !this.customerDetails
     ) {
-      throw new ConfigurationError(
+      throw new Error(
         "Customer details are required if shipping or billing address are set.",
       );
     }

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { Transaction, VaOptions } from "./common";
+import { SnapTransaction, VaOptions } from "./common";
 
 export const BriVirtualAccountOptions = z.object({
   bri_va: VaOptions.optional(),
 });
-export const SnapBriVirtualAccount = Transaction.merge(BriVirtualAccountOptions);
+export const SnapBriVirtualAccount = SnapTransaction.merge(BriVirtualAccountOptions);

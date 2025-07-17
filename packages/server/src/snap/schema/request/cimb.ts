@@ -1,3 +1,3 @@
-import { Transaction } from "./common";
+import { SnapTransaction } from "./common";
 
-export const SnapCimbKlik = Transaction;
+export const SnapCimbKlik = SnapTransaction;

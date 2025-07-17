@@ -1,8 +1,7 @@
 // Sourced from: https://docs.midtrans.com/docs/https-notification-webhooks
 
-import { Transaction } from "../../other/transaction/schema";
-import { type Requester } from "../../requester";
-import * as crypto from "crypto";
+import { CoreRepository } from "src/repository/core";
+import { Transaction } from "src/schemas/transaction";
 
 /*
  * An example payment notification as described by midtrans
@@ -83,23 +82,16 @@ import * as crypto from "crypto";
  *  - Fetch "GET Status API request" after receiving the notification to double-check whether the notification is valid.
  */
 
+// @internal
 export type NotificationHandler<T, R extends Promise<T> | T> = () => R;
+// @internal
 export type HandlerCallbackReturn =
   | { continue: true }
   | { continue: false; response: Response }
   | void;
 
-// will handle checking notification and fetching the transaction
-export function createFetchHandler(
-  coreRequester: Requester,
-  serverKey: string,
-  {
-    beforeTransactionRecheck,
-    processNotification,
-    onInvalidBody,
-    onInvalidSignature,
-    onSuccess,
-  }: {
+export type FetchHandlerOptions = {
+  hooks: {
     /**
      * Callback performed when notification has successfully been properly validated,
      * and proven to be authentic. Just before the best-practice transaction fetch to
@@ -107,17 +99,6 @@ export function createFetchHandler(
      */
     beforeTransactionRecheck?: (
       notification: Transaction,
-    ) => Promise<HandlerCallbackReturn>;
-
-    /**
-     * Callback performed to process the incoming notification, provided with the
-     * same transaction that has been fetched from midtrans itself for "best-practices".
-     *
-     * Take the `transaction`
-     */
-    processNotification: (
-      notification: Transaction,
-      transaction: Transaction,
     ) => Promise<HandlerCallbackReturn>;
 
     /**
@@ -151,14 +132,40 @@ export function createFetchHandler(
       notification: Transaction,
       transaction: Transaction,
     ) => Promise<HandlerCallbackReturn>;
-  },
+  };
+
+  /**
+   * Callback performed to process the incoming notification, provided with the
+   * same transaction that has been fetched from midtrans itself for "best-practices".
+   *
+   * Take the `transaction`
+   */
+  processNotification: (
+    notification: Transaction,
+    transaction: Transaction,
+  ) => Promise<HandlerCallbackReturn>;
+
+  /**
+   * Function to verify the authenticity of the notification. If not set, or
+   * set to `null`, no verification will be done.
+   */
+  verifyAuthenticity?: (notification: Transaction) => Promise<boolean>;
+};
+
+// will handle checking notification and fetching the transaction
+// @internal
+export function createFetchHandler(
+  core: Pick<CoreRepository, "getTransactionStatus">,
+  opts: FetchHandlerOptions,
 ): (req: Request) => Promise<Response> {
   return async (req: Request): Promise<Response> => {
     let body;
     try {
       body = await req.json();
     } catch (e) {
-      const r = (await onInvalidBody?.(undefined, req)) ?? { continue: true };
+      const r = (await opts.hooks.onInvalidBody?.(undefined, req)) ?? {
+        continue: true,
+      };
 
       if (!r.continue) return r.response;
       return new Response("Invalid JSON body", { status: 400 });
@@ -166,7 +173,9 @@ export function createFetchHandler(
 
     const transactionParseResult = await Transaction.safeParseAsync(body);
     if (!transactionParseResult.success) {
-      const r = (await onInvalidBody?.(body, req)) ?? { continue: true };
+      const r = (await opts.hooks.onInvalidBody?.(body, req)) ?? {
+        continue: true,
+      };
 
       if (!r.continue) return r.response;
       return new Response("Invalid body", { status: 400 });
@@ -174,8 +183,8 @@ export function createFetchHandler(
     const transaction = transactionParseResult.data;
 
     // verify the transaction authenticity
-    if (!verifyAuthenticity(transaction, serverKey)) {
-      const r = (await onInvalidSignature?.(transaction, req)) ?? {
+    if (!opts.verifyAuthenticity?.(transaction)) {
+      const r = (await opts.hooks.onInvalidSignature?.(transaction, req)) ?? {
         continue: true,
       };
 
@@ -183,71 +192,35 @@ export function createFetchHandler(
       return new Response("Invalid signature", { status: 403 });
     }
 
-    const transactionRecheckResult = (await beforeTransactionRecheck?.(
-      transaction,
-    )) ?? { continue: true };
+    const transactionRecheckResult =
+      (await opts.hooks.beforeTransactionRecheck?.(transaction)) ?? {
+        continue: true,
+      };
 
     if (!transactionRecheckResult.continue)
       return transactionRecheckResult.response;
 
-    // |======= TODO ======================================================== !!!!!
-    // | Move responsibilities of managing the transaction to another class   !!!!!
-    // |======= TODO ======================================================== !!!!!
-
     // make a request to the status API
-    const statusResp = await coreRequester.get(
-      `/v2/${transaction.transaction_id}/status`,
-      new URLSearchParams(),
-    );
+    const transactionStatus = await core.getTransactionStatus({
+      transactionId: transaction.transaction_id,
+    });
 
-    // parse it
-    let transactionStatus;
-    try {
-      const transactionStatusParseResult =
-        await Transaction.safeParseAsync(statusResp);
-
-      if (!transactionStatusParseResult.success) {
-        console.error("Invalid transaction schema");
-        console.error(transactionStatusParseResult.error);
-
-        return new Response("Internal server error", { status: 500 });
-      }
-
-      transactionStatus = transactionStatusParseResult.data;
-    } catch (e) {
-      console.error("Unable to retrieve json body from transaction API");
-      console.error(e);
-
-      return new Response("Internal server error", { status: 500 });
-    }
-
-    const pr = (await processNotification(transaction, transactionStatus)) ?? {
+    const pr = (await opts.processNotification(
+      transaction,
+      transactionStatus,
+    )) ?? {
       continue: true,
     };
     if (!pr.continue) return pr.response;
 
-    const sr = (await onSuccess?.(transaction, transactionStatus)) ?? {
+    const sr = (await opts.hooks.onSuccess?.(
+      transaction,
+      transactionStatus,
+    )) ?? {
       continue: true,
     };
     if (!sr.continue) return sr.response;
 
     return new Response(null, { status: 200 });
   };
-}
-
-async function verifyAuthenticity(
-  notification: Transaction,
-  serverKey: string,
-): Promise<boolean> {
-  // signature key is SHA512(order_id+status_code+gross_amount+ServerKey)
-  const shouldBe = await crypto.subtle
-    .digest(
-      "SHA-512",
-      Buffer.from(
-        `${notification.order_id}${notification.status_code}${notification.gross_amount}${serverKey}`,
-      ),
-    )
-    .then((x) => Buffer.from(x).toString("hex"));
-
-  return shouldBe === notification.signature_key;
 }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Transaction } from "./common";
+import { SnapTransaction } from "./common";
 
 export const GopayOptions = z.object({
   gopay: z
@@ -10,4 +10,4 @@ export const GopayOptions = z.object({
     .optional(),
 });
 
-export const SnapGopay = Transaction.merge(GopayOptions);
+export const SnapGopay = SnapTransaction.merge(GopayOptions);

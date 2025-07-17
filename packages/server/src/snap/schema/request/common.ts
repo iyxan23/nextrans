@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const TransactionDetailOptions = z.object({
+export const SnapTransactionDetailOptions = z.object({
   order_id: z.string(),
   gross_amount: z.number(),
 });
@@ -59,8 +59,8 @@ export const InstallmentOptions = z.object({
 
 export const VaOptions = z.object({ va_number: z.boolean() });
 
-export const Transaction = z.object({
-  transaction_details: TransactionDetailOptions,
+export const SnapTransaction = z.object({
+  transaction_details: SnapTransactionDetailOptions,
   item_details: ItemDetailsOptions.array().optional(),
   customer_details: CustomerDetailOptions.optional(),
   enabled_payments: z.array(z.string()).optional(),
