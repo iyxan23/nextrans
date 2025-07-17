@@ -60,25 +60,28 @@ file and export it for use throughout your server-side code.
 // src/lib/nextrans.ts
 import { Nextrans } from "@nextrans/server";
 
-export const nextrans = new Nextrans({
-  // Use sandbox for development and testing
-  sandbox: {
-    serverKey: process.env.MIDTRANS_SANDBOX_SERVER_KEY!,
-    merchantId: process.env.MIDTRANS_SANDBOX_MERCHANT_ID!,
-  },
-
-  // Use production keys when you're ready to go live
-  production: {
+// separate access keys for production and sandbox
+let accessKeys: { serverKey: string; merchantId: string };
+if (process.env.MIDTRANS_MODE === "production") {
+  accessKeys = {
     serverKey: process.env.MIDTRANS_PRODUCTION_SERVER_KEY!,
     merchantId: process.env.MIDTRANS_PRODUCTION_MERCHANT_ID!,
-  },
+  };
+} else {
+  accessKeys = {
+    serverKey: process.env.MIDTRANS_SANDBOX_SERVER_KEY!,
+    merchantId: process.env.MIDTRANS_SANDBOX_MERCHANT_ID!,
+  };
+}
 
-  // Easily switch between environments
-  environment: process.env.NODE_ENV === "production" ? "production" : "sandbox",
+export const nextrans = new Nextrans({
+  accessKeys,
+  mode: process.env.MIDTRANS_MODE!,
+  // ^? "production" | "sandbox"
 });
 ```
 
-> **Note:** Remember to store your `serverKey` and `merchantId` securely in
+> **Note:** Remember to store your server key and merchant id securely in
 > environment variables and never expose them on the client-side.
 
 ### 3. Creating a SNAP Transaction
